@@ -32,6 +32,13 @@ function register(user, pass)
     if fs.exists(folder) or user:len() > 2 or folder ~= path then return false end
     local file = fs.open(fs.combine(folder,"password"),"w")
     file.write(encrypt(pass))
+    fs.makeDir(fs.combine(folder,"got"))
+    fs.makeDir(fs.combine(folder,"sent"))
+end
+
+function send(user,pass,receiver)
+    if not check(user,pass) then return false end
+    return true
 end
         
 function button(text,color,fun,line)
