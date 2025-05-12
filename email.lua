@@ -30,7 +30,7 @@ function encrypt(str)
     return count/tonumber(num)
 end
 function check(user, pass)
-    if exist(user) then return false end
+    if exists(user) then return false end
     local folder = fs.combine(path,user)
     local file = fs.open(fs.combine(folder,"password"),"r").readLine()
     if file == pass then
@@ -65,9 +65,9 @@ function send(user,pass,receiver,res, message)
     local sdirf = fs.combine(path,receiver,"got",os.date())
     
     local rfile = fs.open(rdirf,"w")
-    rfile.write("To: " .. receiver .. "\nAt (GMT): " .. os.date() .. "Message:\n" .. message)
+    rfile.write("To: " .. receiver .. "\nAt (GMT): " .. os.date() .. "\nMessage:\n" .. message)
     local sfile = fs.open(sdirf,"w")
-    sfile.write("From: " .. user .. "\nAt (GMT): " .. os.date() .. "Message:\n" .. message)
+    sfile.write("From: " .. user .. "\nAt (GMT): " .. os.date() .. "\nMessage:\n" .. message)
 end
         
 function button(text,color,fun,line)
@@ -133,7 +133,7 @@ while true do
         local pass = params[3]
         local to = params[4]
         local length = 8+user:len()+pass:len()+to:len()
-        local data = message:sub(data,-1)
+        local data = message:sub(length,-1)
         mwrite(("User %s is trying to message %s."):format(user,to))
 
         send(user,pess,to,replyChannel,data)
