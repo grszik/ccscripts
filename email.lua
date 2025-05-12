@@ -26,7 +26,7 @@ function encrypt(str)
         count = count + n
         num = num .. tostring(n)
     end
-    return count*tonumber(num)
+    return count/tonumber(num)
 end
 function check(user, pass)
     local folder = fs.combine(path,user)
@@ -79,7 +79,7 @@ end
 function mwrite(text)
   local w,h = monitor.getSize()
   if #lines < h-5 then
-    lines[#lines] = text
+    lines[#lines+1 = text
     monitor.setCursorPos(1,#lines)
     monitor.clearLine()
     monitor.write(text)
@@ -101,9 +101,13 @@ while true do
 
     if message:match("^register-") then
         local params = {}
-        for p in message:gmatch("%-") do table.insert(params, p) end
+        for p in message:gmatch("%-+") do table.insert(params, p) end
         local user = params[1]
         mwrite(user)
+        --[[
+        local pass = params[2]
+        local good = register(user,pass)
+        --]]
     end
     mwrite(("Message received on side %s on channel %d (reply to %d) from %f blocks away with message %s"):format(
         side, channel, replyChannel, distance, tostring(message)
