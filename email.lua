@@ -70,7 +70,7 @@ function button(text,color,fun,line)
 end
 local lines = {}
 function rewrite()
-  for l in lines do
+  for i=1,#lines do
     monitor.setCursorPos(1,i)
     monitor.clearLine()
     monitor.write(lines[i])
