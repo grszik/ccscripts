@@ -68,16 +68,44 @@ function button(text,color,fun,line)
         funs[line][i] = fun
     end
 end
-
+local lines = {}
+function rewrite()
+  for l in lines do
+    monitor.setCursorPos(1,i)
+    monitor.clearLine()
+    monitor.write(lines[i])
+  end
+end
+function mwrite(text)
+  local w,h = monitor.getSize()
+  if #lines < h-5 then
+    lines[#lines] = text
+    monitor.setCursorPos(1,#lines)
+    monitor.clearLine()
+    monitor.write(text)
+  else
+    local tmp = {}
+    for i=#lines,1 do
+      tmp[i+1] = lines[i]
+    end
+    tmp[1] = text
+    tmp[#tmp] = ""
+    lines = tmp
+  end
+  rewrite()
+end
 
 while true do
+    term.write("Initialized listener.")
     local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
 
     if message:match("^register-") then
-        local user = message:gmatch("%-")[1]
-        term.write(user)
+        local params = {}
+        for p in message:gmatch("%-") do params:insert(p) end
+        local user = params[1]
+        mwrite(user)
     end
-    print(("Message received on side %s on channel %d (reply to %d) from %f blocks away with message %s"):format(
+    mwrite(("Message received on side %s on channel %d (reply to %d) from %f blocks away with message %s"):format(
         side, channel, replyChannel, distance, tostring(message)
     ))
 end
