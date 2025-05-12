@@ -101,13 +101,11 @@ while true do
 
     if message:match("^register-") then
         local params = {}
-        for p in message:gmatch("%-+") do table.insert(params, p) end
+        for p in message:gmatch("([^%-]+)") do table.insert(params, p) end
         local user = params[1]
-        mwrite(user)
-        --[[
+        mwrite("u: " .. user)
         local pass = params[2]
-        local good = register(user,pass)
-        --]]
+        mwrite("p: " .. pass)
     end
     mwrite(("Message received on side %s on channel %d (reply to %d) from %f blocks away with message %s"):format(
         side, channel, replyChannel, distance, tostring(message)
