@@ -112,9 +112,8 @@ function mwrite(text)
   end
   rewrite()
 end
-
+term.write("Initialized listener.")
 while true do
-    term.write("Initialized listener.")
     local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
 
     if message:match("^register-") then
