@@ -125,9 +125,8 @@ while true do
         local params = {}
         for p in message:gmatch("([^%-]+)") do table.insert(params, p) end
         local user = params[2]
-        mwrite("u: " .. user)
+        mwrite("new u: " .. user)
         local pass = params[3]
-        mwrite("p: " .. pass)
 
         local worked = register(user,pass)
         modem.transmit(replyChannel,channel,worked)
@@ -141,7 +140,7 @@ while true do
         local data = message:sub(length,-1)
         mwrite(("User %s is trying to message %s."):format(user,to))
 
-        send(user,pess,to,replyChannel,data)
+        send(user,pass,to,replyChannel,data)
   elseif message:match("^check-") then
         local params = {}
         for p in message:gmatch("([^%-]+)") do table.insert(params, p) end
