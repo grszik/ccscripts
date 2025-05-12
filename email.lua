@@ -30,8 +30,8 @@ function encrypt(str)
     return count/tonumber(num)
 end
 function check(user, pass)
+    if exist(user) then return false end
     local folder = fs.combine(path,user)
-    if not fs.exists(folder) or user:len() < 2 or folder == path then return false end
     local file = fs.open(fs.combine(folder,"password"),"r").readLine()
     if file == pass then
         return true
