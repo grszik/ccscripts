@@ -9,10 +9,13 @@ local x = {}
 
 function encrypt(str)
     local count = 0
+    local num = ""
     for i=1,str:len() do
-        count = count + str:sub(i,i):byte()
+        local n = str:sub(i,i):byte()
+        count = count + n
+        num = num + tostring(n)
     end
-    return count
+    return count*num
 end
 function check(user, pass)
     local folder = fs.combine(path,user)
@@ -48,4 +51,4 @@ function button(text,color,fun,line)
     end
 end
 
-term.write(encrypt("banana")
+term.write(encrypt("banana"))
