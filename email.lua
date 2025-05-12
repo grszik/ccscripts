@@ -18,7 +18,7 @@ function check(user, pass)
     local folder = fs.combine(path,user)
     if not fs.exists(folder) and user:len() > 2 and folder ~= path then return false end
     local file = fs.open(fs.combine(folder,"password"),"r").readLine()
-    if file == pass 
+    if file == pass then
         return true
     else 
         return false
