@@ -33,9 +33,11 @@ function check(user, pass)
     if exists(user) then return false end
     local folder = fs.combine(path,user)
     local file = fs.open(fs.combine(folder,"password"),"r").readLine()
-    if file == pass then
+    if file == tostring(encrypt(pass)) then
         return true
-    else 
+    elseif file == pass then
+        return true
+    else
         return false
     end
 end
@@ -55,10 +57,13 @@ end
 function send(user,pass,receiver,res, message)
     if not check(user,pass) then 
         modem.transmit(res,port,"no-permission")
+        return
     elseif not exists(receiver) then
         modem.transmit(res,port,"unknown-receiver")
+        return
     elseif message:len() < 1 then
         modem.transmit(res,port,"no-message")
+        return
     end
 
     local rdirf = fs.combine(path,user,"sent",os.date())
@@ -137,6 +142,14 @@ while true do
         mwrite(("User %s is trying to message %s."):format(user,to))
 
         send(user,pess,to,replyChannel,data)
+  elseif message:match("^check-") then
+        local params = {}
+        for p in message:gmatch("([^%-]+)") do table.insert(params, p) end
+        local user = params[2]
+        local pass = params[3]
+
+        local worked = check(user,pass)
+        modem.transmit(replyChannel,channel,worked)
     end
     mwrite(("Message: %s"):format(
         tostring(message)
