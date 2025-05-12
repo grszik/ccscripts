@@ -4,8 +4,19 @@ local path = drive.getMountPath()
 local monitor = peripheral.wrap("top")
 monitor.clear()
 
+local modem = peripheral.wrap("front")
+modem.open(9100)
+
 local funs = {}
 local x = {}
+
+-- https://www.reddit.com/r/lua/comments/1ezn10b/luas_missing_switch_statement/
+local function switch(x, cases)
+  local match = cases[x] or cases.default or function() end
+
+  return match()
+end
+
 
 function encrypt(str)
     local count = 0
@@ -13,9 +24,9 @@ function encrypt(str)
     for i=1,str:len() do
         local n = str:sub(i,i):byte()
         count = count + n
-        num = num + tostring(n)
+        num = num .. tostring(n)
     end
-    return count*num
+    return count*tonumber(num)
 end
 function check(user, pass)
     local folder = fs.combine(path,user)
@@ -58,4 +69,15 @@ function button(text,color,fun,line)
     end
 end
 
-term.write(encrypt("banana"))
+
+while true do
+    local event, side, channel, replyChannel, message, distance = os.pullEvent("modem_message")
+
+    if message:match("^register-") then
+        local user = message:gmatch("%-")[1]
+        term.write(user)
+    end
+    print(("Message received on side %s on channel %d (reply to %d) from %f blocks away with message %s"):format(
+        side, channel, replyChannel, distance, tostring(message)
+    ))
+end
