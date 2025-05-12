@@ -101,7 +101,7 @@ while true do
 
     if message:match("^register-") then
         local params = {}
-        for p in message:gmatch("%-") do params:insert(p) end
+        for p in message:gmatch("%-") do table.insert(params, p) end
         local user = params[1]
         mwrite(user)
     end
