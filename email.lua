@@ -4,7 +4,10 @@ local path = drive.getMountPath()
 local monitor = peripheral.wrap("top")
 monitor.clear()
 
+local funs = {}
+
 function button(text,color,fun,line)
+    if funs[line] == nil then funs[line] = {} end
     local w,h = monitor.getSize()
     startX = x[line]
     monitor.setTextColor(color)
