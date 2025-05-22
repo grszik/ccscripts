@@ -1,6 +1,6 @@
 local station = peripheral.wrap("top")
-local monitor = peripheral.wrap("monitor_198")
-local source = peripheral.wrap("front")
+local monitor = peripheral.find("monitor")
+local source = peripheral.find("create_target")
 local drive = peripheral.wrap("bottom")
 
 function center(text,line)
@@ -14,9 +14,6 @@ function center(text,line)
 end
     
 while true do
-    --if monitor ~= nil then 
-        
-    peripheral.wrap("left").setAnalogOutput("front",0)
     monitor.clear()
     monitor.setTextColor(colors.yellow)
     center("Welcome to CLR!",1)
@@ -29,9 +26,6 @@ while true do
     if station.isTrainPresent() then
         center("Train: " .. station.getTrainName(),2)
         if station.hasSchedule() then  
-            if station.getTrainName():match("^CLR") then
-                peripheral.wrap("left").setAnalogOutput("front",15)
-            end
             local schedule = station.getSchedule() 
             local stations = {}
             local entries = schedule.entries
@@ -74,16 +68,6 @@ while true do
             
             eta = string.sub(source.getLine(i),1,5):gsub("~",">10m")
             train = string.sub(source.getLine(i),4,-1)
-
-            local know = false
-
-            for t in fs.list("disk") do
-                if train:match("^" .. t) then
-                    know = true
-                    train = t
-                end
-            end
-            
             if eta:match("mi$") then
                 eta = eta:sub(1,-2)
             end
@@ -99,6 +83,23 @@ while true do
             if train:match(" $") then
                 train = train:sub(1,-2)
             end
+
+            local know = false
+            
+            local known = fs.list("disk")
+            for t in pairs(fs.list("disk")) do
+                if train:gsub("%s+", ""):len() > 1 then
+                term.clearLine()
+                
+                term.setCursorPos(1,1)
+                term.write(known[t] .. " - " .. train .. "; ")
+                end
+                if train:match("^" .. t) then
+                    know = true
+                    train = t
+                end
+            end
+            
             monitor.setCursorPos(7,1+i)
             
             monitor.write(train)
@@ -110,12 +111,11 @@ while true do
             end
             
             if eta:find("%.") ~= nil then destination = "" end
-
-            if not know then return end
-            
-            monitor.setCursorPos(p,1+i)
-            monitor.setTextColor(colors.green)
-            monitor.write(destination)
+            if know then
+                monitor.setCursorPos(p,1+i)
+                monitor.setTextColor(colors.green)
+                monitor.write(destination)
+            end
         end
     end
     sleep(2.5)
