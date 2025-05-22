@@ -50,19 +50,21 @@ while true do
             monitor.setTextColor(colors.white)
             local dtext = {}
             for w in source.getLine(1):gmatch("%S+") do table.insert(dtext, w) end
-            if #dtext > 1 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 4) end
+            if #d > 1 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 4) end
         else
             monitor.setTextColor(colors.lime)
             center("No schedule found",3)
         end
-    else
+    elseif not station.isTrainPresent() or h > 4 then
         monitor.setCursorPos(1,2)
         monitor.write("ETA   Train")
     
         monitor.setCursorPos(math.ceil(w/2)+3,2)
         monitor.write("Destination")
+        local startLine = 2
+        if station.isTrainPresent() then startLine = 5 end
         
-        for i = 2,4 do
+        for i = startLine,h do
             local p = math.ceil(w/2)+3
             monitor.setCursorPos(1,1+i)
             
@@ -88,15 +90,9 @@ while true do
             
             local known = fs.list("disk")
             for t in pairs(fs.list("disk")) do
-                if train:gsub("%s+", ""):len() > 1 then
-                term.clearLine()
-                
-                term.setCursorPos(1,1)
-                term.write(known[t] .. " - " .. train .. "; ")
-                end
-                if train:match("^" .. t) then
+                if train:find(known[t]) then
                     know = true
-                    train = t
+                    train = known[t]
                 end
             end
             
@@ -107,7 +103,10 @@ while true do
             bfp = fs.combine("disk",train)
         
             if fs.exists(bfp) and eta:find("%.") == nil then
-                destination = fs.open(bfp, "r").readLine()
+                file = fs.open(bfp, "r")
+                if file then
+                    destination = fs.open(bfp, "r").readLine()
+                end
             end
             
             if eta:find("%.") ~= nil then destination = "" end
