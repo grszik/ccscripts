@@ -19,7 +19,7 @@ while true do
     center("Welcome to CLR!",1)
     local w,h = monitor.getSize()
     
-    if w == nil or h == nil then os.reboot() end
+    if w and h then 
     
     source.setWidth(w)
     monitor.setTextColor(colors.lightBlue)
@@ -45,7 +45,10 @@ while true do
             destination = destination:gsub(" b%-"," "):gsub(" (%u)B",""):gsub(" Station", "")
             local bdp = fs.combine("disk",station.getTrainName())
             
-            fs.open(bdp,"w").writeLine(destination).close()
+            local f = fs.open(bdp,"w")
+            f.writeLine(destination)
+            f.close()
+            
             center("To: "..destination,3)    
             monitor.setTextColor(colors.white)
             local dtext = {}
@@ -55,7 +58,10 @@ while true do
             monitor.setTextColor(colors.lime)
             center("No schedule found",3)
         end
+    end
     if not station.isTrainPresent() or h > 4 then
+        monitor.setTextColor(colors.lightBlue)
+        
         local startLine = 2
         if station.isTrainPresent() then startLine = 6 end
     
@@ -107,7 +113,8 @@ while true do
             if fs.exists(bfp) and eta:find("%.") == nil then
                 file = fs.open(bfp, "r")
                 if file then
-                    destination = fs.open(bfp, "r").readLine().close()
+                    destination = file.readLine()
+                    file.close()
                 end
             end
             
@@ -118,6 +125,12 @@ while true do
                 monitor.write(destination)
             end
         end
+    end
+
+    else
+        term.setCursorPos(1,2)
+        term.clearLine()
+        term.write("No monitor found!")
     end
     sleep(2.5)
 end
