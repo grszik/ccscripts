@@ -19,7 +19,9 @@ while true do
     center("Welcome to CLR!",1)
     local w,h = monitor.getSize()
     
-    if w and h then 
+    if w and h then
+        term.setCursorPos(1,2)
+        term.clearLine()
     
     source.setWidth(w)
     monitor.setTextColor(colors.lightBlue)
@@ -53,7 +55,14 @@ while true do
             monitor.setTextColor(colors.white)
             local dtext = {}
             for w in source.getLine(1):gmatch("%S+") do table.insert(dtext, w) end
-            if #d > 1 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 4) end
+            if #dtext > 4 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 4)
+            else
+                local departs = ""
+                for item in pairs(dtext) do
+                    departs = departs + item + " "
+                end
+                center(departs:sub(1,-2), 4)
+            end
         else
             monitor.setTextColor(colors.lime)
             center("No schedule found",3)
