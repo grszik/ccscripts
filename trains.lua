@@ -45,7 +45,7 @@ while true do
             destination = destination:gsub(" b%-"," "):gsub(" (%u)B",""):gsub(" Station", "")
             local bdp = fs.combine("disk",station.getTrainName())
             
-            fs.open(bdp,"w").writeLine(destination)
+            fs.open(bdp,"w").writeLine(destination).close()
             center("To: "..destination,3)    
             monitor.setTextColor(colors.white)
             local dtext = {}
@@ -55,18 +55,20 @@ while true do
             monitor.setTextColor(colors.lime)
             center("No schedule found",3)
         end
-    elseif not station.isTrainPresent() or h > 4 then
-        monitor.setCursorPos(1,2)
+    if not station.isTrainPresent() or h > 4 then
+        local startLine = 2
+        if station.isTrainPresent() then startLine = 6 end
+    
+        monitor.setCursorPos(1,startLine)
         monitor.write("ETA   Train")
     
-        monitor.setCursorPos(math.ceil(w/2)+3,2)
+        monitor.setCursorPos(math.ceil(w/2)+3,startLine)
         monitor.write("Destination")
-        local startLine = 2
-        if station.isTrainPresent() then startLine = 5 end
+        local pos = startLine-1
         
-        for i = startLine,h do
+        for i = 2,h+2-startLine do
             local p = math.ceil(w/2)+3
-            monitor.setCursorPos(1,1+i)
+            monitor.setCursorPos(1,pos+i)
             
             eta = string.sub(source.getLine(i),1,5):gsub("~",">10m")
             train = string.sub(source.getLine(i),4,-1)
@@ -96,7 +98,7 @@ while true do
                 end
             end
             
-            monitor.setCursorPos(7,1+i)
+            monitor.setCursorPos(7,pos+i)
             
             monitor.write(train)
             destination = "unknown"
@@ -105,13 +107,13 @@ while true do
             if fs.exists(bfp) and eta:find("%.") == nil then
                 file = fs.open(bfp, "r")
                 if file then
-                    destination = fs.open(bfp, "r").readLine()
+                    destination = fs.open(bfp, "r").readLine().close()
                 end
             end
             
             if eta:find("%.") ~= nil then destination = "" end
             if know then
-                monitor.setCursorPos(p,1+i)
+                monitor.setCursorPos(p,pos+i)
                 monitor.setTextColor(colors.green)
                 monitor.write(destination)
             end
