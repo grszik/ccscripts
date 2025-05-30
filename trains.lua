@@ -77,12 +77,11 @@ while true do
         monitor.setCursorPos(1,startLine)
         monitor.write("ETA   Train")
     
-        monitor.setCursorPos(math.ceil(w/2)+3,startLine)
-        monitor.write("Destination")
+        --monitor.setCursorPos(math.ceil(w/2)+3,startLine)
+        --monitor.write("Destination")
         local pos = startLine-1
         
         for i = 2,h+2-startLine do
-            local p = math.ceil(w/2)+3
             monitor.setCursorPos(1,pos+i)
             
             eta = string.sub(source.getLine(i),1,5):gsub("~",">10m")
@@ -94,8 +93,6 @@ while true do
             monitor.write(eta:gsub("%s+", ""))
             monitor.setTextColor(colors.white)
 
-            --train = train:sub(4,p)
-            
             if train:match("^ ") then
                 train = train:sub(2)
             end
@@ -128,11 +125,12 @@ while true do
             end
             
             if eta:find("%.") ~= nil then destination = "" end
-            if know then
-                monitor.setCursorPos(p-1,pos+i)
-                monitor.setTextColor(colors.green)
-                monitor.write(" " .. destination)
-            end
+
+            i = i + 1
+            monitor.setCursorPos(7,pos+i)
+            monitor.setTextColor(colors.green)
+            monitor.write(" " .. destination)
+            
         end
     end
 
