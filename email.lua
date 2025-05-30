@@ -11,7 +11,7 @@ modem.open(port)
 local funs = {}
 local x = {}
 
--- https://www.reddit.com/r/lua/comments/1ezn10b/luas_missing_switch_statement/
+-- credit: https://www.reddit.com/r/lua/comments/1ezn10b/luas_missing_switch_statement/
 local function switch(x, cases)
   local match = cases[x] or cases.default or function() end
 
