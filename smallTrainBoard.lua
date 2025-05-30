@@ -50,7 +50,7 @@ while true do
         
             local destination = stations[stationIndex-1] or stations[#stations]
             destination = destination:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", ""):gsub(" %*", "")
-            local bdp = fs.combine("disk","destinations",station.getTrainName())
+            local bdp = fs.combine("disk","destination",station.getTrainName())
             local vdp = fs.combine("disk","via",station.getTrainName())
 
             local viaParts = {"via "}
