@@ -59,7 +59,7 @@ while true do
             else
                 local departs = ""
                 for item in pairs(dtext) do
-                    departs = departs + item + " "
+                    departs = departs .. dtext[item] .. " "
                 end
                 center(departs:sub(1,-2), 4)
             end
@@ -94,7 +94,7 @@ while true do
             monitor.write(eta:gsub("%s+", ""))
             monitor.setTextColor(colors.white)
 
-            train = train:sub(4,p)
+            --train = train:sub(4,p)
             
             if train:match("^ ") then
                 train = train:sub(2)
@@ -129,9 +129,9 @@ while true do
             
             if eta:find("%.") ~= nil then destination = "" end
             if know then
-                monitor.setCursorPos(p,pos+i)
+                monitor.setCursorPos(p-1,pos+i)
                 monitor.setTextColor(colors.green)
-                monitor.write(destination)
+                monitor.write(" " .. destination)
             end
         end
     end
