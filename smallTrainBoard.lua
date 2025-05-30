@@ -1,0 +1,176 @@
+local station = peripheral.wrap("top")
+local monitor = peripheral.find("monitor")
+local source = peripheral.find("create_target")
+local drive = peripheral.wrap("bottom")
+
+function center(text,line)
+    local w,h = monitor.getSize()
+    if w ~= nil then
+    local len = text:len()
+    local pos = math.ceil(w/2-len/2)
+    monitor.setCursorPos(pos+1,line)
+    monitor.write(text)
+    end
+end
+local runTime = 0
+
+while true do
+    runTime = runTime + 1
+    
+    monitor.clear()
+    monitor.setTextColor(colors.yellow)
+    center("Welcome to CLR!",1)
+    local w,h = monitor.getSize()
+    
+    if w and h then
+        term.setCursorPos(1,2)
+        term.clearLine()
+    
+    source.setWidth(164)
+    if station.isTrainPresent() then
+        monitor.setTextColor(colors.magenta)
+        center("Train: " .. station.getTrainName(),2)
+        if station.hasSchedule() then  
+            local schedule = station.getSchedule() 
+            local stations = {}
+            local stationIndex = 0
+            local entries = schedule.entries
+            local step = 0
+            local i = 0
+            local k = 0
+            for x,e in pairs(entries) do
+                k = k+1
+                if e.instruction.id == "create:destination" then
+                    table.insert(stations,e.instruction.data.text)
+                    local ins = e.instruction.data.text:match("(.*%*)")
+                    if station.getStationName():find(ins or e.instruction.data.text) then stationIndex = k end
+                end
+            end
+            monitor.setTextColor(colors.green)
+        
+            local destination = stations[stationIndex-1] or stations[#stations]
+            destination = destination:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", ""):gsub(" %*", "")
+            local bdp = fs.combine("disk","destinations",station.getTrainName())
+            local vdp = fs.combine("disk","via",station.getTrainName())
+
+            local viaParts = {"via "}
+            if #stations > 2 then
+                for j=1,#stations-2 do
+                    local index = (j+stationIndex)%#stations
+                    if index == 0 then index = #stations end
+                    local current = stations[index]:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", ""):gsub(" %*", "")
+                    local spacer = ", "
+                    if j == #stations-3 then spacer = " and " end
+                    if j == #stations-2 then spacer = "" end
+                    local text = viaParts[#viaParts] .. current .. spacer
+                    if text:len() >= w then
+                        table.insert(viaParts, current .. spacer)
+                    else
+                        viaParts[#viaParts] = text
+                    end
+                end
+            else viaParts = false end
+            
+            local f = fs.open(bdp,"w")
+            f.writeLine(destination)
+            f.close()
+            if viaParts then
+                f = fs.open(vdp, "w")
+                f.writeLine(textutils.serialiseJSON(viaParts))
+                f.close()
+            else
+                f = fs.delete(vdp)
+            end
+            center("To: "..destination,3)
+            monitor.setTextColor(colors.lightBlue)
+            
+            center(viaParts and viaParts[(runTime%#viaParts)+1] or "Directly", 4)
+            monitor.setTextColor(colors.white)
+            local dtext = {}
+            for w in source.getLine(1):gmatch("%S+") do table.insert(dtext, w) end
+            if #dtext >= 4 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 5)
+            else
+                local departs = ""
+                for item in pairs(dtext) do
+                    departs = departs .. dtext[item] .. " "
+                end
+                center(departs:sub(1,-2), 5)
+            end
+        else
+            monitor.setTextColor(colors.lime)
+            center("No schedule found",3)
+        end
+    end
+    if not station.isTrainPresent() or h > 4 then
+        monitor.setTextColor(colors.lightBlue)
+        
+        local startLine = 2
+        if station.isTrainPresent() then startLine = 6 end
+    
+        monitor.setCursorPos(1,startLine)
+        monitor.write("ETA   Train")
+    
+        --monitor.setCursorPos(math.ceil(w/2)+3,startLine)
+        --monitor.write("Destination")
+        local pos = startLine-1
+        
+        for j = 1,(h+2-startLine)/2 do
+            local i = j*2
+            monitor.setCursorPos(1,pos+i)
+            
+            eta = string.sub(source.getLine(j+1),1,5):gsub("~",">10m")
+            train = string.sub(source.getLine(j+1),4,-1)
+            if eta:match("mi$") then
+                eta = eta:sub(1,-2)
+            end
+            monitor.setTextColor(colors.magenta)
+            monitor.write(eta:gsub("%s+", ""))
+            monitor.setTextColor(colors.white)
+
+            if train:match("^ ") then
+                train = train:sub(2)
+            end
+            if train:match(" $") then
+                train = train:sub(1,-2)
+            end
+
+            local know = false
+            
+            local known = fs.list("disk")
+            for t in pairs(fs.list("disk")) do
+                if train:find(known[t]) then
+                    know = true
+                    train = known[t]
+                end
+            end
+            
+            monitor.setCursorPos(7,pos+i)
+            
+            monitor.write(train)
+            destination = "unknown"
+            bfp = fs.combine("disk","destination",train)
+        
+            if fs.exists(bfp) and eta:find("%.") == nil then
+                file = fs.open(bfp, "r")
+                if file then
+                    destination = file.readLine()
+                    file.close()
+                end
+            end
+            
+            if eta:find("%.") ~= nil then destination = "" end
+
+            monitor.setCursorPos(7,pos+i+1)
+            monitor.setTextColor(colors.green)
+            monitor.write(" " .. destination)
+            
+        end
+    end
+
+    else
+        term.setCursorPos(1,2)
+        term.clearLine()
+        term.write("No monitor found!")
+    end
+    sleep(2.5)
+end
