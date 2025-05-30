@@ -42,7 +42,7 @@ while true do
             monitor.setCursorPos(1,pos+i)
             
             eta = string.sub(source.getLine(j+1),1,5):gsub("~",">10m")
-            train = string.sub(source.getLine(j+1),4,-1)
+            train = string.sub(source.getLine(j+1),7,-1)
             if eta:match("mi$") then
                 eta = eta:sub(1,-2)
             end
@@ -59,8 +59,8 @@ while true do
 
             local know = false
             
-            local known = fs.list("disk")
-            for t in pairs(fs.list("disk")) do
+            local known = fs.list("disk/destination")
+            for t in pairs(fs.list("disk/destination")) do
                 if train:find(known[t]) then
                     know = true
                     train = known[t]
@@ -87,7 +87,7 @@ while true do
             monitor.setTextColor(colors.green)
             monitor.write(" " .. destination)
 
-            vdp = fs.combine("disk",train)
+            vdp = fs.combine("disk","via",train)
             local via = {"Directly"}
         
             if fs.exists(vdp) and eta:find("%.") == nil then
