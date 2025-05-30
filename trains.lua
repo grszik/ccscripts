@@ -24,44 +24,61 @@ while true do
         term.clearLine()
     
     source.setWidth(w)
-    monitor.setTextColor(colors.lightBlue)
     if station.isTrainPresent() then
+        monitor.setTextColor(colors.magenta)
         center("Train: " .. station.getTrainName(),2)
         if station.hasSchedule() then  
             local schedule = station.getSchedule() 
             local stations = {}
+            local stationIndex = 0
             local entries = schedule.entries
             local step = 0
             local i = 0
+            local k = 0
             for x,e in pairs(entries) do
+                k = k+1
                 if e.instruction.id == "create:destination" then
                     table.insert(stations,e.instruction.data.text)
+                    local ins = e.instruction.data.text:match("(.*)")
+                    if station.getStationName():find(ins or e.instruction.data.text) then stationIndex = k end
                 end
             end
-            monitor.setTextColor(colors.lime)
+            monitor.setTextColor(colors.green)
         
-            local destination = stations[#stations]
-            if destination == station.getStationName() then
-                destination = stations[#stations-1]
-            end
-            destination = destination:gsub(" b%-"," "):gsub(" (%u)B",""):gsub(" Station", "")
+            local destination = stations[stationIndex-1] or stations[#stations]
+            destination = destination:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", "")
             local bdp = fs.combine("disk",station.getTrainName())
+
+            local via = "via "
+            if #stations > 2 then
+                for j=1,#stations-2 do
+                    local index = (j+stationIndex)%#stations
+                    if index == 0 then index = #stations end
+                    local current = stations[index]
+                    local spacer = ", "
+                    if j == #stations-3 then spacer = " and " end
+                    if j == #stations-2 then spacer = "" end
+                    via = via .. current .. spacer
+                end
+            end
             
             local f = fs.open(bdp,"w")
             f.writeLine(destination)
             f.close()
             
-            center("To: "..destination,3)    
+            center("To: "..destination,3)
+            monitor.setTextColor(colors.lightBlue)
+            center(via == "via " and "Directly" or via, 4)
             monitor.setTextColor(colors.white)
             local dtext = {}
             for w in source.getLine(1):gmatch("%S+") do table.insert(dtext, w) end
-            if #dtext > 4 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 4)
+            if #dtext >= 4 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 5)
             else
                 local departs = ""
                 for item in pairs(dtext) do
                     departs = departs .. dtext[item] .. " "
                 end
-                center(departs:sub(1,-2), 4)
+                center(departs:sub(1,-2), 5)
             end
         else
             monitor.setTextColor(colors.lime)
@@ -81,7 +98,8 @@ while true do
         --monitor.write("Destination")
         local pos = startLine-1
         
-        for i = 2,h+2-startLine do
+        for j = 2,(h+2-startLine)/2 do
+            local i = j*2
             monitor.setCursorPos(1,pos+i)
             
             eta = string.sub(source.getLine(i),1,5):gsub("~",">10m")
@@ -126,8 +144,7 @@ while true do
             
             if eta:find("%.") ~= nil then destination = "" end
 
-            i = i + 1
-            monitor.setCursorPos(7,pos+i)
+            monitor.setCursorPos(7,pos+i+1)
             monitor.setTextColor(colors.green)
             monitor.write(" " .. destination)
             
