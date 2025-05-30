@@ -12,8 +12,11 @@ function center(text,line)
     monitor.write(text)
     end
 end
-    
+local runTime = 0
+
 while true do
+    runTime = runTime + 1
+    
     monitor.clear()
     monitor.setTextColor(colors.yellow)
     center("Welcome to CLR!",1)
@@ -23,7 +26,7 @@ while true do
         term.setCursorPos(1,2)
         term.clearLine()
     
-    source.setWidth(w)
+    source.setWidth(125)
     if station.isTrainPresent() then
         monitor.setTextColor(colors.magenta)
         center("Train: " .. station.getTrainName(),2)
@@ -39,7 +42,7 @@ while true do
                 k = k+1
                 if e.instruction.id == "create:destination" then
                     table.insert(stations,e.instruction.data.text)
-                    local ins = e.instruction.data.text:match("(.*)")
+                    local ins = e.instruction.data.text:match("(.*%*)")
                     if station.getStationName():find(ins or e.instruction.data.text) then stationIndex = k end
                 end
             end
@@ -49,18 +52,23 @@ while true do
             destination = destination:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", "")
             local bdp = fs.combine("disk",station.getTrainName())
 
-            local via = "via "
+            local viaParts = {"via "}
             if #stations > 2 then
                 for j=1,#stations-2 do
                     local index = (j+stationIndex)%#stations
                     if index == 0 then index = #stations end
-                    local current = stations[index]
+                    local current = stations[index]:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", "")
                     local spacer = ", "
                     if j == #stations-3 then spacer = " and " end
                     if j == #stations-2 then spacer = "" end
-                    via = via .. current .. spacer
+                    local text = viaParts[#viaParts] .. current .. spacer
+                    if text:len() >= w then
+                        table.insert(viaParts, current .. spacer)
+                    else
+                        viaParts[#viaParts] = text
+                    end
                 end
-            end
+            else viaParts = false end
             
             local f = fs.open(bdp,"w")
             f.writeLine(destination)
@@ -68,7 +76,8 @@ while true do
             
             center("To: "..destination,3)
             monitor.setTextColor(colors.lightBlue)
-            center(via == "via " and "Directly" or via, 4)
+            
+            center(viaParts and viaParts[runTime%#viaParts] or "Directly", 4)
             monitor.setTextColor(colors.white)
             local dtext = {}
             for w in source.getLine(1):gmatch("%S+") do table.insert(dtext, w) end
@@ -98,12 +107,12 @@ while true do
         --monitor.write("Destination")
         local pos = startLine-1
         
-        for j = 2,(h+2-startLine)/2 do
+        for j = 1,(h+2-startLine)/2 do
             local i = j*2
             monitor.setCursorPos(1,pos+i)
             
-            eta = string.sub(source.getLine(i),1,5):gsub("~",">10m")
-            train = string.sub(source.getLine(i),4,-1)
+            eta = string.sub(source.getLine(j+1),1,5):gsub("~",">10m")
+            train = string.sub(source.getLine(j+1),4,-1)
             if eta:match("mi$") then
                 eta = eta:sub(1,-2)
             end
