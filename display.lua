@@ -30,7 +30,7 @@ function platformDisplay(monitor, station)
 
   if station.isTrainPresent() then
     monitor.setTextColor(colors.magenta)
-    center("Train: " .. station.getTrainName(),2)
+    center("Train: " .. station.getTrainName(),2,monitor)
     local bdp = fs.combine("disk","destination",station.getTrainName())
     local vdp = fs.combine("disk","via",station.getTrainName())
     if fs.exists(bdp) then
@@ -40,7 +40,7 @@ function platformDisplay(monitor, station)
         file.close()
 
         monitor.setTextColor(colors.green)
-        center("To: "..destination,3)
+        center("To: "..destination,3,monitor)
       end
     end
   
@@ -68,19 +68,19 @@ function platformDisplay(monitor, station)
           end
         else viaParts = false end
         monitor.setTextColor(colors.lightBlue)
-        center(viaParts and viaParts[(runTime%#viaParts)+1] or "Directly", 4)
+        center(viaParts and viaParts[(runTime%#viaParts)+1] or "Directly", 4,monitor)
       end
     end
     monitor.setTextColor(colors.white)
     local dtext = {}
     for w in source.getLine(1):gmatch("%S+") do table.insert(dtext, w) end
-    if #dtext >= 4 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 5)
+    if #dtext >= 4 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 5,monitor)
     else
       local departs = ""
       for item in pairs(dtext) do
         departs = departs .. dtext[item] .. " "
       end
-      center(departs:sub(1,-2), 5)
+      center(departs:sub(1,-2), 5,monitor)
     end
   end
   if not station.isTrainPresent() or h > 4 then
@@ -251,8 +251,8 @@ while true do
             end
           end
       else viaParts = false end
-      monitor.setTextColor(colors.lightBlue)
-      center(viaParts and viaParts[(runTime%#viaParts)+1] or "Directly", 4)
+      monApi.color(colors.lightBlue)
+      monApi.writeCenter(viaParts and viaParts[(runTime%#viaParts)+1] or "Directly", 4)
     end
   end
   monApi.pos(7,pos+i+1)
