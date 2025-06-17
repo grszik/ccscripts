@@ -74,14 +74,13 @@ function platformDisplay(monitor, station)
     monitor.setTextColor(colors.white)
     local dtext = {}
     for w in source.getLine(1):gmatch("%S+") do table.insert(dtext, w) end
-      if #dtext >= 4 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 5)
-      else
-        local departs = ""
-        for item in pairs(dtext) do
-          departs = departs .. dtext[item] .. " "
-        end
-        center(departs:sub(1,-2), 5)
+    if #dtext >= 4 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 5)
+    else
+      local departs = ""
+      for item in pairs(dtext) do
+        departs = departs .. dtext[item] .. " "
       end
+      center(departs:sub(1,-2), 5)
     end
   end
   if not station.isTrainPresent() or h > 4 then
@@ -143,6 +142,7 @@ function platformDisplay(monitor, station)
       monitor.write(" " .. destination)
     end
   end
+end
 function station(station)
   if station.isTrainPresent() then
     if station.hasSchedule() then  
