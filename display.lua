@@ -40,54 +40,40 @@ function platformDisplay(monitor, station)
         file.close()
 
         monitor.setTextColor(colors.green)
-      
+        center("To: "..destination,3)
       end
+    end
+  
+    if fs.exists(vdp) then
+      local file = fs.open(vdp, "r")
+      if file then
+        local stations = textutils.unserialiseJSON(file.readLine())
+        file.close()
 
-
-    
-            monitor.setTextColor(colors.green)
-        
-            local destination = stations[stationIndex-1] or stations[#stations]
-            destination = destination:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", ""):gsub(" %*", "")
-            local bdp = fs.combine("disk","destination",station.getTrainName())
-            local vdp = fs.combine("disk","via",station.getTrainName())
-
-            local viaParts = {"via "}
-            if #stations > 2 then
-                for j=1,#stations-2 do
-                    local index = (j+stationIndex)%#stations
-                    if index == 0 then index = #stations end
-                    local current = stations[index]:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", ""):gsub(" %*", "")
-                    local spacer = ", "
-                    if j == #stations-3 then spacer = " and " end
-                    if j == #stations-2 then spacer = "" end
-                    local text = viaParts[#viaParts] .. current .. spacer
-                    if text:len() >= w then
-                        table.insert(viaParts, current .. spacer)
-                    else
-                        viaParts[#viaParts] = text
-                    end
-                end
-            else viaParts = false end
-            
-            local f = fs.open(bdp,"w")
-            f.writeLine(destination)
-            f.close()
-            if viaParts then
-                f = fs.open(vdp, "w")
-                f.writeLine(textutils.serialiseJSON(viaParts))
-                f.close()
+        local viaParts = {"via "}
+        if #stations > 2 then
+          for j=1,#stations-2 do
+            local index = (j+stationIndex)%#stations
+            if index == 0 then index = #stations end
+            local current = stations[index]:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", ""):gsub(" %*", "")
+            local spacer = ", "
+            if j == #stations-3 then spacer = " and " end
+            if j == #stations-2 then spacer = "" end
+            local text = viaParts[#viaParts] .. current .. spacer
+            if text:len() >= w then
+              table.insert(viaParts, current .. spacer)
             else
-                f = fs.delete(vdp)
+              viaParts[#viaParts] = text
             end
-            center("To: "..destination,3)
-            monitor.setTextColor(colors.lightBlue)
-            
-            center(viaParts and viaParts[(runTime%#viaParts)+1] or "Directly", 4)
-
-      monitor.setTextColor(colors.white)
-      local dtext = {}
-      for w in source.getLine(1):gmatch("%S+") do table.insert(dtext, w) end
+          end
+        else viaParts = false end
+        monitor.setTextColor(colors.lightBlue)
+        center(viaParts and viaParts[(runTime%#viaParts)+1] or "Directly", 4)
+      end
+    end
+    monitor.setTextColor(colors.white)
+    local dtext = {}
+    for w in source.getLine(1):gmatch("%S+") do table.insert(dtext, w) end
       if #dtext >= 4 then center("Departs in: " .. dtext[3] .. dtext[4]:sub(1,1):lower(), 5)
       else
         local departs = ""
@@ -97,70 +83,66 @@ function platformDisplay(monitor, station)
         center(departs:sub(1,-2), 5)
       end
     end
-    if not station.isTrainPresent() or h > 4 then
-        monitor.setTextColor(colors.lightBlue)
+  end
+  if not station.isTrainPresent() or h > 4 then
+    monitor.setTextColor(colors.lightBlue)
         
-        local startLine = 2
-        if station.isTrainPresent() then startLine = 6 end
+    local startLine = 2
+    if station.isTrainPresent() then startLine = 6 end
+    monitor.setCursorPos(1,startLine)
+    monitor.write("ETA   Train")
     
-        monitor.setCursorPos(1,startLine)
-        monitor.write("ETA   Train")
-    
-        local pos = startLine-1
-        
-        for j = 1,(h+2-startLine)/2 do
-            local i = j*2
-            monitor.setCursorPos(1,pos+i)
+    local pos = startLine-1
+    for j = 1,(h+2-startLine)/2 do
+      local i = j*2
+      monitor.setCursorPos(1,pos+i)
             
-            eta = string.sub(source.getLine(j+1),1,5):gsub("~",">10m")
-            train = string.sub(source.getLine(j+1),7,-1)
-            if eta:match("mi$") then
-                eta = eta:sub(1,-2)
-            end
-            monitor.setTextColor(colors.magenta)
-            monitor.write(eta:gsub("%s+", ""))
-            monitor.setTextColor(colors.white)
+      eta = string.sub(source.getLine(j+1),1,5):gsub("~",">10m")
+      train = string.sub(source.getLine(j+1),7,-1)
+      if eta:match("mi$") then
+        eta = eta:sub(1,-2)
+      end
+      monitor.setTextColor(colors.magenta)
+      monitor.write(eta:gsub("%s+", ""))
+      monitor.setTextColor(colors.white)
 
-            if train:match("^ ") then
-                train = train:sub(2)
-            end
-            if train:match(" $") then
-                train = train:sub(1,-2)
-            end
+      if train:match("^ ") then
+        train = train:sub(2)
+      end
+      if train:match(" $") then
+        train = train:sub(1,-2)
+      end
 
-            local know = false
+      local know = false
             
-            local known = fs.list("disk/destination")
-            for t in pairs(fs.list("disk/destination")) do
-                if train:find(known[t]) then
-                    know = true
-                    train = known[t]
-                end
-            end
-            
-            monitor.setCursorPos(7,pos+i)
-            
-            monitor.write(train)
-            destination = "unknown"
-            bfp = fs.combine("disk","destination",train)
-        
-            if fs.exists(bfp) and eta:find("%.") == nil then
-                file = fs.open(bfp, "r")
-                if file then
-                    destination = file.readLine()
-                    file.close()
-                end
-            end
-            
-            if eta:find("%.") ~= nil then destination = "" end
-
-            monitor.setCursorPos(7,pos+i+1)
-            monitor.setTextColor(colors.green)
-            monitor.write(" " .. destination)
-            
+      local known = fs.list("disk/destination")
+      for t in pairs(fs.list("disk/destination")) do
+        if train:find(known[t]) then
+          know = true
+          train = known[t]
         end
+      end
+            
+      monitor.setCursorPos(7,pos+i)
+            
+      monitor.write(train)
+      destination = "unknown"
+      bfp = fs.combine("disk","destination",train)
+        
+      if fs.exists(bfp) and eta:find("%.") == nil then
+        file = fs.open(bfp, "r")
+        if file then
+          destination = file.readLine()
+          file.close()
+        end
+      end
+        
+      if eta:find("%.") ~= nil then destination = "" end
+      monitor.setCursorPos(7,pos+i+1)
+      monitor.setTextColor(colors.green)
+      monitor.write(" " .. destination)
     end
-end
+  end
 function station(station)
   if station.isTrainPresent() then
     if station.hasSchedule() then  
