@@ -92,6 +92,7 @@ function platformDisplay(monitor, station)
     monitor.write("ETA   Train")
     
     local pos = startLine-1
+    local w,h = monitor.getSize()
     for j = 1,(h+2-startLine)/2 do
       local i = j*2
       monitor.setCursorPos(1,pos+i)
@@ -197,64 +198,98 @@ while true do
   monApi.clear()
   monApi.color(colors.yellow)
   monApi.writeCenter("Welcome to CLR!",1)
-
-  for t in pairs(fs.list("disk/destination")) do
-    if train:find(known[t]) then
-      know = true
-      train = known[t]
-    end
-  end
-            
-  monApi.pos(7,pos+i)
-            
-  monApi.write(train)
-  destination = "unknown"
-  bfp = fs.combine("disk","destination",train)
+  source.setWidth(125)
+  monApi.color(colors.lightBlue)
         
-  if fs.exists(bfp) and eta:find("%.") == nil then
-    file = fs.open(bfp, "r")
-    if file then
-      destination = file.readLine()
-      file.close()
-    end
-  end
+  local startLine = 2
+  monApi.pos(1,startLine)
+  monApi.write("ETA   Train")
+    
+  monApi.pos(w-("Destination"):len()-1,startLine)
+  monApi.write("Destination")
+  local pos = 1
+        
+  for j = 1,(h+2-startLine)/2 do
+    local i = j*2
+    monApi.pos(1,pos+i)
             
-  if eta:find("%.") ~= nil then destination = "" end
-
-  monApi.pos(w-1-destination:len(),pos+i)
-  monApi.color(colors.green)
-  monApi.write(" " .. destination)
-
-  vdp = fs.combine("disk","via",train)
-  local refMonitor = periperal.wrap("monitor_")
-  local w,h = refMonitor.getSize()
-  if fs.exists(vdp) then
-    local file = fs.open(vdp, "r")
-    if file then
-      local stations = textutils.unserialiseJSON(file.readLine())
-      file.close()
-
-      local viaParts = {"via "}
-      if #stations > 2 then
-        for j=1,#stations-2 do
-          local index = (j+stationIndex)%#stations
-          if index == 0 then index = #stations end
-            local current = stations[index]:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", ""):gsub(" %*", "")
-            local spacer = ", "
-            if j == #stations-3 then spacer = " and " end
-            if j == #stations-2 then spacer = "" end
-            local text = viaParts[#viaParts] .. current .. spacer
-            if text:len() >= w then
-              table.insert(viaParts, current .. spacer)
-            else
-              viaParts[#viaParts] = text
-            end
-          end
-      else viaParts = false end
-      monApi.color(colors.lightBlue)
-      monApi.writeCenter(viaParts and viaParts[(runTime%#viaParts)+1] or "Directly", 4)
+    eta = string.sub(source.getLine(j+1),1,5):gsub("~",">10m")
+    train = string.sub(source.getLine(j+1),7,-1)
+    if eta:match("mi$") then
+      eta = eta:sub(1,-2)
     end
+    monApi.color(colors.magenta)
+    monApi.write(eta:gsub("%s+", ""))
+    monApi.color(colors.white)
+
+    if train:match("^ ") then
+      train = train:sub(2)
+    end
+    if train:match(" $") then
+      train = train:sub(1,-2)
+    end
+
+    local know = false
+    local known = fs.list("disk/destination")
+    for t in pairs(fs.list("disk/destination")) do
+      if train:find(known[t]) then
+        know = true
+        train = known[t]
+      end
+    end
+              
+    monApi.pos(7,pos+i)
+              
+    monApi.write(train)
+    destination = "unknown"
+    bfp = fs.combine("disk","destination",train)
+          
+    if fs.exists(bfp) and eta:find("%.") == nil then
+      file = fs.open(bfp, "r")
+      if file then
+        destination = file.readLine()
+        file.close()
+      end
+    end
+              
+    if eta:find("%.") ~= nil then destination = "" end
+  
+    monApi.pos(w-1-destination:len(),pos+i)
+    monApi.color(colors.green)
+    monApi.write(" " .. destination)
+  
+    vdp = fs.combine("disk","via",train)
+    local refMonitor = periperal.wrap("monitor_")
+    local w,h = refMonitor.getSize()
+    if fs.exists(vdp) then
+      local file = fs.open(vdp, "r")
+      if file then
+        local stations = textutils.unserialiseJSON(file.readLine())
+        file.close()
+  
+        local viaParts = {"via "}
+        if #stations > 2 then
+          for j=1,#stations-2 do
+            local index = (j+stationIndex)%#stations
+            if index == 0 then index = #stations end
+              local current = stations[index]:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", ""):gsub(" %*", "")
+              local spacer = ", "
+              if j == #stations-3 then spacer = " and " end
+              if j == #stations-2 then spacer = "" end
+              local text = viaParts[#viaParts] .. current .. spacer
+              if text:len() >= w then
+                table.insert(viaParts, current .. spacer)
+              else
+                viaParts[#viaParts] = text
+              end
+            end
+        else viaParts = false end
+        monApi.color(colors.lightBlue)
+        monApi.writeCenter(viaParts and viaParts[(runTime%#viaParts)+1] or "Directly", 4)
+      end
+    end
+    monApi.pos(7,pos+i+1)
+    monApi.write(viaParts[(runTime%#viaParts)+1])
   end
-  monApi.pos(7,pos+i+1)
-  monApi.write(viaParts[(runTime%#viaParts)+1])         
+  sleep(2.5)   
 end
