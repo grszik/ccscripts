@@ -226,13 +226,33 @@ while true do
   monApi.write(" " .. destination)
 
   vdp = fs.combine("disk","via",train)
-  local via = {"Directly"}
-        
-  if fs.exists(vdp) and eta:find("%.") == nil then
-    file = fs.open(vdp, "r")
+  local refMonitor = periperal.wrap("monitor_")
+  local w,h = refMonitor.getSize()
+  if fs.exists(vdp) then
+    local file = fs.open(vdp, "r")
     if file then
-      via = file.readLine()
+      local stations = textutils.unserialiseJSON(file.readLine())
       file.close()
+
+      local viaParts = {"via "}
+      if #stations > 2 then
+        for j=1,#stations-2 do
+          local index = (j+stationIndex)%#stations
+          if index == 0 then index = #stations end
+            local current = stations[index]:gsub(" (%u)%-"," "):gsub(" (%u)B",""):gsub(" Station", ""):gsub(" %*", "")
+            local spacer = ", "
+            if j == #stations-3 then spacer = " and " end
+            if j == #stations-2 then spacer = "" end
+            local text = viaParts[#viaParts] .. current .. spacer
+            if text:len() >= w then
+              table.insert(viaParts, current .. spacer)
+            else
+              viaParts[#viaParts] = text
+            end
+          end
+      else viaParts = false end
+      monitor.setTextColor(colors.lightBlue)
+      center(viaParts and viaParts[(runTime%#viaParts)+1] or "Directly", 4)
     end
   end
   monApi.pos(7,pos+i+1)
